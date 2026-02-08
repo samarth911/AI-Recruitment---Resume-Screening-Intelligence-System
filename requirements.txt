@@ -1,9 +1,10 @@
 fastapi
 uvicorn
-python-multipart
+streamlit
 pdfplumber
 python-docx
-openai==0.28
-pymongo
-streamlit
+spacy
+sentence-transformers
+scikit-learn
+
 
