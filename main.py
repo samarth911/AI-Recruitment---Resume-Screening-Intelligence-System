@@ -18,7 +18,6 @@ async def upload(file: UploadFile):
 
     return {"message": "resume uploaded", "resume": text}
 
-print(parse_resume("/Users/samarthnegi/Desktop/Laksh/AI Recruitment & Resume Screening Intelligence System/IMP_Topics.docx"))
 
 @app.post("/match")
 async def match(data: dict):
