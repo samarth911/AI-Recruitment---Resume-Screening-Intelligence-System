@@ -13,7 +13,9 @@ def parse_pdf(path):
 
 def parse_docx(path):
     doc = Document(path)
+    
     return "\n".join([p.text for p in doc.paragraphs])
+
 
 
 def parse_resume(path):
@@ -23,3 +25,9 @@ def parse_resume(path):
         return parse_docx(path)
     else:
         raise Exception("Only PDF/DOCX allowed")
+
+
+# if __name__ == "__main__":
+#     output = parse_docx("/Users/samarthnegi/Desktop/Laksh/AI Recruitment & Resume Screening Intelligence System/IMP_Topics.docx")
+#     print("---- FUNCTION RETURN ----")
+#     print(output)

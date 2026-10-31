@@ -1,6 +1,6 @@
-import re
-import spacy
-from sentence_transformers import SentenceTransformer, util
+import re #exact patterns of characters
+import spacy  #who reads the resume to find specific facts and clean up the noise.
+from sentence_transformers import SentenceTransformer, util #The Encoder ,The Calculator
 
 nlp = spacy.load("en_core_web_sm")
 model = SentenceTransformer('all-MiniLM-L6-v2')

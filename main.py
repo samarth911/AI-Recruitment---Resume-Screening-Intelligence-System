@@ -4,7 +4,7 @@ from parser import parse_resume
 from ai_matcher import match_with_jd
 
 app = FastAPI()
-
+# decorator
 
 @app.post("/upload_resume")
 async def upload(file: UploadFile):
@@ -18,7 +18,7 @@ async def upload(file: UploadFile):
 
     return {"message": "resume uploaded", "resume": text}
 
-
+print(parse_resume("/Users/samarthnegi/Desktop/Laksh/AI Recruitment & Resume Screening Intelligence System/IMP_Topics.docx"))
 
 @app.post("/match")
 async def match(data: dict):

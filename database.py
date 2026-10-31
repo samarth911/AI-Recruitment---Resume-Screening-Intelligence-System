@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import MongoClient   #Warehouse Manager.
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["ai_recruitment"]
