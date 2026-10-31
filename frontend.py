@@ -16,7 +16,7 @@ if menu == "Upload Resume":
     if file and st.button("Submit"):
 
         res = requests.post(
-            "http://localhost:8000/upload_resume",
+            "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
             files={"file": file}
         )
 
@@ -46,7 +46,7 @@ if menu == "Match with JD":
 
         if jd_file:
             res = requests.post(
-                "http://localhost:8000/upload_resume",
+                "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
                 files={"file": jd_file}
             )
             jd_text = res.json()["resume"]
@@ -56,7 +56,7 @@ if menu == "Match with JD":
         if st.button("Analyze"):
 
             res = requests.post(
-                "http://localhost:8000/match",
+                "https://ai-recruitment-resume-screening-jnld.onrender.com/match",
                 json={
                     "resume": st.session_state["resume"],
                     "jd": jd_text
@@ -137,7 +137,7 @@ if menu == "Bulk Ranking":
             for idx, file in enumerate(files):
                 status_text.text(f"Processing {file.name}... ({idx+1}/{len(files)})")
                 res = requests.post(
-                    "http://localhost:8000/upload_resume",
+                    "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
                     files={"file": file}
                 )
                 if res.status_code == 200:
@@ -224,7 +224,7 @@ if menu == "Bulk Ranking":
                     jd_file.seek(0)
                     
                     res = requests.post(
-                        "http://localhost:8000/upload_resume",
+                        "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
                         files={"file": (jd_file.name, file_bytes, "application/pdf")},
                         timeout=30
                     )
@@ -283,7 +283,7 @@ if menu == "Bulk Ranking":
         else:
             with st.spinner("Ranking candidates for all JDs..."):
                 res = requests.post(
-                    "http://localhost:8000/bulk_match",
+                    "https://ai-recruitment-resume-screening-jnld.onrender.com/bulk_match",
                     json={
                         "resumes": st.session_state["resumes"],
                         "jds": st.session_state["jds"]
