@@ -1,5 +1,9 @@
 import streamlit as st
 import requests
+import os
+
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8001").rstrip("/")
+REQUEST_TIMEOUT = (10, 180)
 
 st.title("AI Recruitment System - Offline NLP")
 
@@ -16,8 +20,9 @@ if menu == "Upload Resume":
     if file and st.button("Submit"):
 
         res = requests.post(
-            "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
-            files={"file": file}
+            f"{BACKEND_URL}/upload_resume",
+            files={"file": file},
+            timeout=REQUEST_TIMEOUT,
         )
 
         data = res.json()
@@ -46,8 +51,9 @@ if menu == "Match with JD":
 
         if jd_file:
             res = requests.post(
-                "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
-                files={"file": jd_file}
+                f"{BACKEND_URL}/upload_resume",
+                files={"file": jd_file},
+                timeout=REQUEST_TIMEOUT,
             )
             jd_text = res.json()["resume"]
             st.success("JD PDF Loaded")
@@ -56,11 +62,12 @@ if menu == "Match with JD":
         if st.button("Analyze"):
 
             res = requests.post(
-                "https://ai-recruitment-resume-screening-jnld.onrender.com/match",
+                f"{BACKEND_URL}/match",
                 json={
                     "resume": st.session_state["resume"],
                     "jd": jd_text
-                }
+                },
+                timeout=REQUEST_TIMEOUT,
             )
 
             result = res.json()
@@ -112,6 +119,9 @@ if menu == "Bulk Ranking":
     st.header("Bulk Resume Ranking")
     st.write("Upload multiple resumes and compare them with multiple Job Descriptions")
 
+    st.session_state.setdefault("resumes", [])
+    st.session_state.setdefault("processed_files", [])
+
     # Multiple resume uploader
     files = st.file_uploader(
         "Upload Multiple Resumes (PDF/DOCX)",
@@ -119,34 +129,45 @@ if menu == "Bulk Ranking":
         type=["pdf", "docx"]
     )
 
-    # Store resumes in session_state
+    # Process each newly selected resume once. Keep the extracted text in
+    # session state so adding a text JD does not discard uploaded resumes.
     if files:
-        if "resumes" not in st.session_state:
-            st.session_state["resumes"] = []
-            st.session_state["processed_files"] = []
-        
-        # Check if new files were uploaded
-        current_file_names = [f.name for f in files]
+        current_file_names = [(f.name, f.size) for f in files]
         if current_file_names != st.session_state.get("processed_files", []):
             st.session_state["resumes"] = []
-            st.session_state["processed_files"] = current_file_names
+            uploaded_file_errors = []
             
             progress_bar = st.progress(0)
             status_text = st.empty()
             
             for idx, file in enumerate(files):
                 status_text.text(f"Processing {file.name}... ({idx+1}/{len(files)})")
-                res = requests.post(
-                    "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
-                    files={"file": file}
-                )
-                if res.status_code == 200:
-                    st.session_state["resumes"].append(res.json()["resume"])
+                try:
+                    file.seek(0)
+                    res = requests.post(
+                        f"{BACKEND_URL}/upload_resume",
+                        files={"file": (file.name, file.getvalue(), file.type)},
+                        timeout=REQUEST_TIMEOUT,
+                    )
+                    response_data = res.json()
+                    resume_text = response_data.get("resume", "")
+                    if res.ok and resume_text and resume_text.strip():
+                        st.session_state["resumes"].append(resume_text)
+                    else:
+                        uploaded_file_errors.append(
+                            f"{file.name}: {response_data.get('error', res.text)}"
+                        )
+                except (requests.RequestException, ValueError) as error:
+                    uploaded_file_errors.append(f"{file.name}: {error}")
                 progress_bar.progress((idx + 1) / len(files))
-            
+
+            st.session_state["processed_files"] = current_file_names
             status_text.text(f"✓ Successfully loaded {len(st.session_state['resumes'])} resumes")
             progress_bar.empty()
             status_text.empty()
+
+            for error in uploaded_file_errors:
+                st.error(f"Error processing {error}")
 
         if st.session_state.get("resumes"):
             st.success(f"✓ {len(st.session_state['resumes'])} resumes loaded")
@@ -224,9 +245,9 @@ if menu == "Bulk Ranking":
                     jd_file.seek(0)
                     
                     res = requests.post(
-                        "https://ai-recruitment-resume-screening-jnld.onrender.com/upload_resume",
+                        f"{BACKEND_URL}/upload_resume",
                         files={"file": (jd_file.name, file_bytes, "application/pdf")},
-                        timeout=30
+                        timeout=REQUEST_TIMEOUT
                     )
                     
                     if res.status_code == 200:
@@ -283,11 +304,12 @@ if menu == "Bulk Ranking":
         else:
             with st.spinner("Ranking candidates for all JDs..."):
                 res = requests.post(
-                    "https://ai-recruitment-resume-screening-jnld.onrender.com/bulk_match",
+                    f"{BACKEND_URL}/bulk_match",
                     json={
                         "resumes": st.session_state["resumes"],
                         "jds": st.session_state["jds"]
-                    }
+                    },
+                    timeout=REQUEST_TIMEOUT,
                 )
 
                 if res.status_code == 200:

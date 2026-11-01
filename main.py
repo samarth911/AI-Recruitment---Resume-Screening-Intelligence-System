@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile
-import shutil
+import os
+import tempfile
 from parser import parse_resume
 from ai_matcher import match_with_jd
 
@@ -9,12 +10,16 @@ app = FastAPI()
 @app.post("/upload_resume")
 async def upload(file: UploadFile):
 
-    path = f"temp_{file.filename}"
+    suffix = os.path.splitext(file.filename or "")[1].lower()
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as buffer:
+        path = buffer.name
+        while chunk := await file.read(1024 * 1024):
+            buffer.write(chunk)
 
-    with open(path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    text = parse_resume(path)
+    try:
+        text = parse_resume(path)
+    finally:
+        os.unlink(path)
 
     return {"message": "resume uploaded", "resume": text}
 
@@ -115,4 +120,3 @@ async def bulk_match(data: dict):
         }
     else:
         return {"error": "Job description is required"}
-
