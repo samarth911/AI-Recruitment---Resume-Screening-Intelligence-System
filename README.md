@@ -4,7 +4,7 @@
 
 The AI Resume Screening & Candidate Ranking System is an intelligent recruitment assistant that automates resume analysis and candidate evaluation. It helps recruiters reduce manual screening time by extracting candidate information, comparing resumes with job descriptions, calculating ATS scores, and ranking candidates based on their suitability for a role.
 
-The system combines Natural Language Processing (NLP), semantic similarity using Sentence Transformers, and rule-based skill matching to provide accurate candidate rankings.
+The system combines lightweight Natural Language Processing (NLP), TF-IDF text similarity, and rule-based skill matching to provide candidate rankings with modest memory requirements.
 
 ---
 
@@ -39,8 +39,7 @@ The system combines Natural Language Processing (NLP), semantic similarity using
 
 ## NLP & AI
 
-* spaCy
-* Sentence Transformers (`all-MiniLM-L6-v2`)
+* scikit-learn TF-IDF similarity
 * Regular Expressions
 
 ## Resume Parsing
@@ -143,15 +142,9 @@ Required skills are identified using the same skill database used for resume ana
 
 ---
 
-## Step 5 – Semantic Similarity
+## Step 5 – Text Similarity
 
-The resume text and job description are converted into embeddings using the Sentence Transformer model:
-
-```
-all-MiniLM-L6-v2
-```
-
-The embeddings are compared using cosine similarity to determine how closely the resume matches the overall meaning and context of the job description.
+The resume text and job description are converted into TF-IDF vectors using scikit-learn. The vectors are compared using cosine similarity to measure overlap between the resume and job description.
 
 This generates the **Semantic Score**.
 
@@ -201,7 +194,7 @@ This generates the **Skill Match Score**.
 
 ## Step 7 – ATS Score Calculation
 
-The final ATS score combines semantic similarity and exact skill matching.
+The final ATS score combines text similarity and exact skill matching.
 
 ```
 ATS Score =

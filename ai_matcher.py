@@ -1,9 +1,7 @@
-import re #exact patterns of characters
-import spacy  #who reads the resume to find specific facts and clean up the noise.
-from sentence_transformers import SentenceTransformer, util #The Encoder ,The Calculator
+import re
 
-nlp = spacy.load("en_core_web_sm")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 SKILL_DB = [
@@ -30,13 +28,20 @@ def extract_skills(text):
 
 
 def semantic_score(resume, jd):
+    if not resume.strip() or not jd.strip():
+        return 0.0
 
-    emb1 = model.encode(resume)
-    emb2 = model.encode(jd)
+    vectorizer = TfidfVectorizer(
+        lowercase=True,
+        stop_words="english",
+        max_features=5000,
+    )
+    try:
+        vectors = vectorizer.fit_transform([resume, jd])
+    except ValueError:
+        return 0.0
 
-    score = util.cos_sim(emb1, emb2)
-
-    return float(score[0][0]) * 100
+    return float(cosine_similarity(vectors[0:1], vectors[1:2])[0][0]) * 100
 
 
 def match_with_jd(resume_text, jd_text):
@@ -94,11 +99,5 @@ def extract_name(text):
         if email in line and i > 0:
             return lines[i-1]
 
-    # 2. spaCy NER fallback
-    doc = nlp(text)
-    for ent in doc.ents:
-        if ent.label_ == "PERSON" and len(ent.text.split()) <= 3:
-            return ent.text
-
-    # 3. heuristic first line
+    # 2. Heuristic first line
     return lines[0][:30]
